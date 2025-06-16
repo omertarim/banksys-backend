@@ -14,5 +14,8 @@ namespace BankSysAPI.Models
 
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
+
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpires { get; set; }
     }
 }

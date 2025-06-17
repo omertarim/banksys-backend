@@ -24,12 +24,46 @@ namespace BankSysAPI.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult Register(User user)
+        public IActionResult Register([FromBody] RegisterRequest request)
         {
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+            var user = new User
+            {
+                Email = request.Email,
+                Username = request.Username,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+            };
+
             _context.Users.Add(user);
             _context.SaveChanges();
-            return Ok(user);
+
+            // Yeni IBAN üret
+            string iban = GenerateIban();
+
+            // Aynı kullanıcı için daha önce açılmış hesap sayısı
+            int existingCount = _context.Accounts.Count(a => a.UserId == user.Id);
+            string accountNumber = $"{user.Id:D4}-{existingCount + 1:D2}";
+
+            var account = new Account
+            {
+                UserId = user.Id,
+                IBAN = iban,
+                AccountNumber = accountNumber,
+                AccountType = "Cari Hesap",
+                Currency = "TL",
+                Balance = 1000.00M,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Accounts.Add(account);
+            _context.SaveChanges();
+
+            return Ok(new { user.Id, user.Email, user.Username });
+        }
+
+        private string GenerateIban()
+        {
+            var random = new Random();
+            return "TR" + random.Next(100000000, 999999999) + random.Next(100000000, 999999999);
         }
 
         [HttpPost("login")]
@@ -41,7 +75,7 @@ namespace BankSysAPI.Controllers
                 return Unauthorized("Invalid credentials");
             }
 
-            var token = _jwtService.GenerateToken(user.Email);
+            var token = _jwtService.GenerateToken(user.Id, user.Email);
             return Ok(new { Token = token });
         }
 
@@ -65,10 +99,9 @@ namespace BankSysAPI.Controllers
                 return NotFound("User not found");
             }
 
-            // GUID token oluştur ve sona erme süresi ata
             string resetToken = Guid.NewGuid().ToString();
             user.ResetToken = resetToken;
-            user.ResetTokenExpires = DateTime.UtcNow.AddHours(1); // 1 saat geçerli
+            user.ResetTokenExpires = DateTime.UtcNow.AddHours(1);
 
             _context.SaveChanges();
 
@@ -77,8 +110,6 @@ namespace BankSysAPI.Controllers
 
             return Ok("Password reset link has been sent to your email.");
         }
-
-
 
         [HttpGet("reset-password")]
         public IActionResult ValidateResetLink([FromQuery] string token)
@@ -109,22 +140,5 @@ namespace BankSysAPI.Controllers
 
             return Ok("Password has been successfully reset.");
         }
-
-
-
-
-
-
-
-
-
-
-
     }
-
-
-
-
-
-
 }

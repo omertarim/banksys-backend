@@ -7,15 +7,19 @@ namespace BankSysAPI.Models
         public int Id { get; set; }
 
         [Required]
-        public string Username { get; set; } = string.Empty;
+        public string Username { get; set; } = null!;
 
         [Required]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; } = null!;
 
         [Required]
-        public string PasswordHash { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = null!;
 
         public string? ResetToken { get; set; }
+
         public DateTime? ResetTokenExpires { get; set; }
+
+        // Navigation property (opsiyonel ama iyi olur)
+        public ICollection<Account> Accounts { get; set; } = new List<Account>();
     }
 }

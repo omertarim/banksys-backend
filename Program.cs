@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using BankSysAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,23 +28,59 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// DB bağlantısı
 builder.Services.AddDbContext<BankingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// CORS politikası
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy => policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
+
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<EmailService>();
-
 
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-//app.UseHttpsRedirection();
+// CORS burada aktif edilmeli!
+app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Dummy account ekleme
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BankingDbContext>();
+
+    var existing = db.Accounts.FirstOrDefault(a => a.UserId == 15);
+    if (existing != null)
+    {
+        db.Accounts.Remove(existing);
+        db.SaveChanges();
+    }
+
+    db.Accounts.Add(new Account
+    {
+        UserId = 15,
+        IBAN = "TR150006100519786457841326",
+        Balance = 9999.99M
+    });
+
+    db.SaveChanges();
+}
+
 app.Run();

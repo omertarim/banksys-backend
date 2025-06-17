@@ -19,16 +19,15 @@ namespace BankSysAPI.Services
             _key = config["Jwt:Key"] ?? throw new ArgumentNullException("Jwt:Key");
             _issuer = config["Jwt:Issuer"] ?? throw new ArgumentNullException("Jwt:Issuer");
             _audience = config["Jwt:Audience"] ?? throw new ArgumentNullException("Jwt:Audience");
-            _expiresInMinutes = config["Jwt:ExpiresInMinutes"] != null 
-            ? int.Parse(config["Jwt:ExpiresInMinutes"]) 
-            : 60;
+            _expiresInMinutes = int.Parse(config["Jwt:ExpiresInMinutes"] ?? "60");
         }
 
-        public string GenerateToken(string email)
+        public string GenerateToken(int userId, string email)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString())
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));

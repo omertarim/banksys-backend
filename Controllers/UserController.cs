@@ -26,49 +26,33 @@ namespace BankSysAPI.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest request)
         {
-            bool isAdminEmail = request.Email.EndsWith("@admin.com");
+            var email = request.Email?.Trim().ToLower();
 
+            // Kullanıcı her zaman onay beklemelidir (admin dahil)
             var user = new User
             {
-                Email = request.Email,
+                Email = email,
                 Username = request.Username,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                IsAdmin = isAdminEmail,
-                IsApproved = !isAdminEmail // adminse onay bekleyecek
+                FullName = request.FullName,
+                IsAdmin = email != null && email.EndsWith("@admin.com"),
+                IsApproved = false // ✅ herkeste başlangıçta false
             };
 
             _context.Users.Add(user);
             _context.SaveChanges();
-
-            // Sadece onaylı kullanıcıya otomatik hesap oluştur
-            if (user.IsApproved)
-            {
-                var iban = "TR" + Guid.NewGuid().ToString("N")[..24].ToUpper();
-
-                var account = new Account
-                {
-                    UserId = user.Id,
-                    IBAN = iban,
-                    Balance = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    AccountType = "Cari",
-                    Currency = "TL",
-                    AccountNumber = $"{user.Id:0000}-001"
-                };
-
-                _context.Accounts.Add(account);
-                _context.SaveChanges();
-            }
 
             return Ok(new
             {
                 user.Id,
                 user.Email,
                 user.Username,
+                user.FullName,
                 user.IsAdmin,
                 user.IsApproved
-            });
+                });
         }
+
 
 
         [HttpPost("login")]
@@ -174,7 +158,26 @@ namespace BankSysAPI.Controllers
 
             return Ok("Kullanıcı onaylandı.");
         }
+        [Authorize]
+        [HttpGet("all")]
+        public IActionResult GetAllUsers()
+        {
+            var requesterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var requester = _context.Users.FirstOrDefault(u => u.Id == requesterId);
 
+            if (requester == null || !requester.IsAdmin)
+                return Forbid("Bu işlemi yapma yetkiniz yok.");
+
+            var users = _context.Users.Select(u => new
+            {
+                u.Id,
+                u.Username,
+                u.Email,
+                u.IsApproved
+            }).ToList();
+
+            return Ok(users);
+        }
 
 
 

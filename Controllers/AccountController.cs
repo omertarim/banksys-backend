@@ -125,6 +125,75 @@ namespace BankSysAPI.Controllers
 
             return Ok(new { newAccount.Id, newAccount.IBAN, newAccount.AccountNumber });
         }
+        [Authorize]
+        [HttpGet("balance")]
+        public async Task<IActionResult> GetMyBalance()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.UserId == userId);
+
+            if (account == null)
+                return NotFound("Bu kullanıcıya ait hesap bulunamadı.");
+
+            return Ok(new { account.IBAN, account.Balance });
+        }
+        [Authorize]
+        [HttpGet("list")]
+        public async Task<IActionResult> GetUserAccounts()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var accounts = await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.AccountNumber,
+                    a.IBAN,
+                    a.Balance,
+                    a.AccountType,
+                    a.Currency
+                })
+                .ToListAsync();
+
+            return Ok(accounts);
+        }
+
+
+        [Authorize]
+        [HttpPost("admin/deposit")]
+        public async Task<IActionResult> AdminDeposit([FromBody] AdminDepositRequest request)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var adminUser = await _context.Users.FindAsync(userId);
+
+            if (adminUser == null || !adminUser.IsAdmin)
+                return Forbid("Sadece adminler bu işlemi yapabilir.");
+
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.IBAN == request.IBAN);
+            if (account == null)
+                return NotFound("IBAN'a ait hesap bulunamadı.");
+
+            if (request.Amount <= 0)
+            return BadRequest("Yüklenecek miktar pozitif olmalıdır.");
+
+            account.Balance += request.Amount;
+
+            _context.Transactions.Add(new Transaction
+            {
+                SenderAccountId = null,
+                ReceiverAccountId = account.Id,
+                Amount = request.Amount,
+                Timestamp = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return Ok("Bakiye başarıyla yüklendi.");
+        }
+
+
 
     }
 }

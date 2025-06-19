@@ -26,58 +26,68 @@ namespace BankSysAPI.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest request)
         {
+            bool isAdminEmail = request.Email.EndsWith("@admin.com");
+
             var user = new User
             {
                 Email = request.Email,
                 Username = request.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                IsAdmin = isAdminEmail,
+                IsApproved = !isAdminEmail // adminse onay bekleyecek
             };
 
             _context.Users.Add(user);
             _context.SaveChanges();
 
-            // Yeni IBAN üret
-            string iban = GenerateIban();
-
-            // Aynı kullanıcı için daha önce açılmış hesap sayısı
-            int existingCount = _context.Accounts.Count(a => a.UserId == user.Id);
-            string accountNumber = $"{user.Id:D4}-{existingCount + 1:D2}";
-
-            var account = new Account
+            // Sadece onaylı kullanıcıya otomatik hesap oluştur
+            if (user.IsApproved)
             {
-                UserId = user.Id,
-                IBAN = iban,
-                AccountNumber = accountNumber,
-                AccountType = "Cari Hesap",
-                Currency = "TL",
-                Balance = 1000.00M,
-                CreatedAt = DateTime.UtcNow
-            };
+                var iban = "TR" + Guid.NewGuid().ToString("N")[..24].ToUpper();
 
-            _context.Accounts.Add(account);
-            _context.SaveChanges();
+                var account = new Account
+                {
+                    UserId = user.Id,
+                    IBAN = iban,
+                    Balance = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    AccountType = "Cari",
+                    Currency = "TL",
+                    AccountNumber = $"{user.Id:0000}-001"
+                };
 
-            return Ok(new { user.Id, user.Email, user.Username });
-        }
-
-        private string GenerateIban()
-        {
-            var random = new Random();
-            return "TR" + random.Next(100000000, 999999999) + random.Next(100000000, 999999999);
-        }
-
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest login)
-        {
-            var user = _context.Users.SingleOrDefault(u => u.Email == login.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(login.Password, user.PasswordHash))
-            {
-                return Unauthorized("Invalid credentials");
+                _context.Accounts.Add(account);
+                _context.SaveChanges();
             }
 
-            var token = _jwtService.GenerateToken(user.Id, user.Email);
-            return Ok(new { Token = token });
+            return Ok(new
+            {
+                user.Id,
+                user.Email,
+                user.Username,
+                user.IsAdmin,
+                user.IsApproved
+            });
         }
+
+
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginRequest request)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Email == request.Email);
+
+            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                return Unauthorized("Geçersiz e-posta veya şifre.");
+
+            if (!user.IsApproved)
+                return Unauthorized("Hesabınız henüz onaylanmadı. Lütfen bir yöneticiyle iletişime geçin.");
+
+            var token = _jwtService.GenerateToken(user);
+
+
+            return Ok(new { token });
+        }
+
 
         [Authorize]
         [HttpGet("secret")]
@@ -105,7 +115,8 @@ namespace BankSysAPI.Controllers
 
             _context.SaveChanges();
 
-            string resetLink = $"http://localhost:5252/api/user/reset-password?token={resetToken}";
+            string resetLink = $"http://localhost:5173/reset-password?token={resetToken}";
+
             _emailService.SendPasswordResetEmail(user.Email, resetLink);
 
             return Ok("Password reset link has been sent to your email.");
@@ -140,5 +151,42 @@ namespace BankSysAPI.Controllers
 
             return Ok("Password has been successfully reset.");
         }
+
+
+
+        [Authorize]
+        [HttpPost("approve/{userId}")]
+        public async Task<IActionResult> ApproveUser(int userId)
+        {
+            var requesterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var requester = await _context.Users.FindAsync(requesterId);
+
+            if (requester == null || !requester.IsAdmin)
+                return Forbid("Bu işlemi yapma yetkiniz yok.");
+
+            var userToApprove = await _context.Users.FindAsync(userId);
+
+            if (userToApprove == null)
+                return NotFound("Kullanıcı bulunamadı.");
+
+            userToApprove.IsApproved = true;
+            await _context.SaveChangesAsync();
+
+            return Ok("Kullanıcı onaylandı.");
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }

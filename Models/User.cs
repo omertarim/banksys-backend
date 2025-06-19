@@ -1,25 +1,21 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BankSysAPI.Models
+public class User
 {
-    public class User
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        [Required]
-        public string Username { get; set; } = null!;
+    [Required]
+    public string Email { get; set; }
 
-        [Required]
-        public string Email { get; set; } = null!;
+    [Required]
+    public string Username { get; set; }
 
-        [Required]
-        public string PasswordHash { get; set; } = null!;
+    [Required]
+    public string PasswordHash { get; set; }
 
-        public string? ResetToken { get; set; }
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpires { get; set; }
 
-        public DateTime? ResetTokenExpires { get; set; }
-
-        // Navigation property (opsiyonel ama iyi olur)
-        public ICollection<Account> Accounts { get; set; } = new List<Account>();
-    }
+    public bool IsAdmin { get; set; } = false;
+    public bool IsApproved { get; set; } = true;
 }

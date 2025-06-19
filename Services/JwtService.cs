@@ -4,6 +4,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BankSysAPI.Models; // User modeline erişmek için
 
 namespace BankSysAPI.Services
 {
@@ -22,12 +23,13 @@ namespace BankSysAPI.Services
             _expiresInMinutes = int.Parse(config["Jwt:ExpiresInMinutes"] ?? "60");
         }
 
-        public string GenerateToken(int userId, string email)
+        public string GenerateToken(User user)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));

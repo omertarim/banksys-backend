@@ -16,6 +16,8 @@ public class User
     public string? ResetToken { get; set; }
     public DateTime? ResetTokenExpires { get; set; }
 
+    public bool IsApproved { get; set; }
     public bool IsAdmin { get; set; } = false;
-    public bool IsApproved { get; set; } = true;
+
+    public string FullName { get; set; } = "";
 }

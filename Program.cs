@@ -73,14 +73,8 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    db.Accounts.Add(new Account
-    {
-        UserId = 15,
-        IBAN = "TR150006100519786457841326",
-        Balance = 9999.99M
-    });
-
-    db.SaveChanges();
+    
+    
 }
 
 app.Run();

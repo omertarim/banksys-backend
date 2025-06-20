@@ -20,4 +20,11 @@ public class User
     public bool IsAdmin { get; set; } = false;
 
     public string FullName { get; set; } = "";
+    
+    public string Status { get; set; } = "Pending"; // Varsayılan değer
+
+
+
+
+
 }

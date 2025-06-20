@@ -13,6 +13,8 @@ namespace BankSysAPI.Data
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<LoanApplication> LoanApplications { get; set; }
+
 
 
 

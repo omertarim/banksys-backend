@@ -5,6 +5,8 @@ using BankSysAPI.Models;
 using BankSysAPI.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace BankSysAPI.Controllers
 {
@@ -138,26 +140,49 @@ namespace BankSysAPI.Controllers
 
 
 
-        [Authorize]
-        [HttpPost("approve/{userId}")]
-        public async Task<IActionResult> ApproveUser(int userId)
+        [HttpPost("approve/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ApproveUser(int id)
         {
-            var requesterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var requester = await _context.Users.FindAsync(requesterId);
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound("Kullanıcı bulunamadı.");
 
-            if (requester == null || !requester.IsAdmin)
-                return Forbid("Bu işlemi yapma yetkiniz yok.");
+            user.IsApproved = true;
+            user.Status = "Accepted";
 
-            var userToApprove = await _context.Users.FindAsync(userId);
-
-            if (userToApprove == null)
-                return NotFound("Kullanıcı bulunamadı.");
-
-            userToApprove.IsApproved = true;
             await _context.SaveChangesAsync();
+            return Ok(new { message = "Kullanıcı onaylandı." });
+        }       
 
-            return Ok("Kullanıcı onaylandı.");
+        [HttpPost("reject/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RejectUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound("Kullanıcı bulunamadı.");
+
+            user.Status = "Rejected";
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Kullanıcı reddedildi." });
         }
+
+        [HttpGet("pending")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetPendingUsers()
+        {
+            var users = await _context.Users
+                .Where(u => u.Status == "Pending")
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+
+
+
+
+
         [Authorize]
         [HttpGet("all")]
         public IActionResult GetAllUsers()
@@ -178,17 +203,6 @@ namespace BankSysAPI.Controllers
 
             return Ok(users);
         }
-
-
-
-
-
-
-
-
-
-
-
 
 
     }

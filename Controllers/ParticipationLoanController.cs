@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using BankSysAPI.Models;
+using BankSysAPI.Data;
 
 namespace BankSysAPI.Controllers
 {
@@ -7,12 +10,19 @@ namespace BankSysAPI.Controllers
     [Route("api/participation")]
     public class ParticipationLoanController : ControllerBase
     {
+        private readonly BankingDbContext _context;
+
         private readonly Dictionary<string, decimal> _profitRates = new()
         {
             { "İhtiyaç", 2.4m },
             { "Taşıt", 2.1m },
             { "Konut", 1.7m }
         };
+
+        public ParticipationLoanController(BankingDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpPost("calculate")]
         public IActionResult CalculateParticipationLoan([FromBody] ParticipationLoanRequest request)
@@ -35,6 +45,32 @@ namespace BankSysAPI.Controllers
             };
 
             return Ok(response);
+        }
+
+        [HttpPost("apply")]
+        [Authorize]
+        public async Task<IActionResult> ApplyForLoan([FromBody] LoanApplicationRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdClaim.Value);
+
+            var application = new LoanApplication
+            {
+                UserId = userId,
+                LoanType = request.CreditType,
+                Amount = request.Amount,
+                TermInMonths = request.TermInMonths,
+                Status = "Pending",
+                ApplicationDate = DateTime.UtcNow
+            };
+
+            _context.LoanApplications.Add(application);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Kredi başvurunuz alınmıştır ve onay bekliyor." });
         }
     }
 }

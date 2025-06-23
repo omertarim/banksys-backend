@@ -6,6 +6,12 @@ using BankSysAPI.Models;
 
 namespace BankSysAPI.Controllers
 {
+
+
+     public class LoanStatusUpdateRequest
+    {
+        public string NewStatus { get; set; }
+    }
     [ApiController]
     [Route("api/admin/loans")]
     [Authorize(Roles = "Admin")]
@@ -30,6 +36,9 @@ namespace BankSysAPI.Controllers
             return Ok(pendingLoans);
         }
 
+
+
+
         [HttpPut("{id}/update-status")]
         public async Task<IActionResult> UpdateLoanStatus(int id, [FromBody] LoanStatusUpdateRequest request)
         {
@@ -41,6 +50,16 @@ namespace BankSysAPI.Controllers
                 return BadRequest("Geçersiz durum.");
 
             loan.Status = request.NewStatus;
+
+            if (request.NewStatus == "Approved")
+            {
+                var targetAccount = await _context.Accounts.FindAsync(loan.TargetAccountId);
+                if (targetAccount == null)
+                    return NotFound("Hedef hesap bulunamadı.");
+
+                targetAccount.Balance += loan.Amount;
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new { message = $"Başvuru {request.NewStatus.ToLower()} olarak güncellendi." });

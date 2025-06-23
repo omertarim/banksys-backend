@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using BankSysAPI.Models;
 using BankSysAPI.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace BankSysAPI.Controllers
 {
@@ -64,7 +66,8 @@ namespace BankSysAPI.Controllers
                 Amount = request.Amount,
                 TermInMonths = request.TermInMonths,
                 Status = "Pending",
-                ApplicationDate = DateTime.UtcNow
+                ApplicationDate = DateTime.UtcNow,
+                TargetAccountId = request.TargetAccountId 
             };
 
             _context.LoanApplications.Add(application);
@@ -72,5 +75,41 @@ namespace BankSysAPI.Controllers
 
             return Ok(new { message = "Kredi başvurunuz alınmıştır ve onay bekliyor." });
         }
+
+
+
+
+
+
+        [Authorize]
+        [HttpGet("my-applications")]
+        public async Task<IActionResult> GetMyLoanApplications()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var applications = await _context.LoanApplications
+                .Where(l => l.UserId == userId)
+                .Include(l => l.User)
+                .Include(l => l.TargetAccount)
+                .Select(l => new
+                {
+                    l.Id,
+                    l.LoanType,
+                    l.Amount,
+                    l.TermInMonths,
+                    l.Status,
+                    l.ApplicationDate,
+                    TargetAccount = new
+                    {
+                        l.TargetAccount.Id,
+                        l.TargetAccount.IBAN,
+                        l.TargetAccount.AccountType
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(applications);
+        }
+
     }
 }

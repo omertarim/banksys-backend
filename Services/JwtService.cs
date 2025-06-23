@@ -4,7 +4,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BankSysAPI.Models; // User modeline erişmek için
+using BankSysAPI.Models;
 
 namespace BankSysAPI.Services
 {

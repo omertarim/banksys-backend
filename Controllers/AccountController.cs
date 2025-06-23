@@ -18,8 +18,8 @@ namespace BankSysAPI.Controllers
             _context = context;
         }
 
-        [HttpGet("{userId}/balance")]
         [Authorize]
+        [HttpGet("{userId}/balance")]
         public async Task<IActionResult> GetBalance(int userId)
         {
             var account = await _context.Accounts
@@ -86,7 +86,7 @@ namespace BankSysAPI.Controllers
 
             _context.Transactions.Add(new Transaction
             {
-                SenderAccountId = null, // dış kaynak
+                SenderAccountId = null,
                 ReceiverAccountId = account.Id,
                 Amount = request.Amount,
                 Timestamp = DateTime.UtcNow
@@ -102,10 +102,8 @@ namespace BankSysAPI.Controllers
         {
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            // Benzersiz IBAN oluştur
             string iban = "TR" + Guid.NewGuid().ToString("N")[..24].ToUpper();
 
-            // Hesap numarası belirle
             int existingCount = await _context.Accounts.CountAsync(a => a.UserId == userId);
             string accountNumber = $"{userId:0000}-{existingCount + 1:000}";
 
@@ -125,6 +123,7 @@ namespace BankSysAPI.Controllers
 
             return Ok(new { newAccount.Id, newAccount.IBAN, newAccount.AccountNumber });
         }
+
         [Authorize]
         [HttpGet("balance")]
         public async Task<IActionResult> GetMyBalance()
@@ -139,6 +138,7 @@ namespace BankSysAPI.Controllers
 
             return Ok(new { account.IBAN, account.Balance });
         }
+
         [Authorize]
         [HttpGet("list")]
         public async Task<IActionResult> GetUserAccounts()
@@ -161,7 +161,6 @@ namespace BankSysAPI.Controllers
             return Ok(accounts);
         }
 
-
         [Authorize]
         [HttpPost("admin/deposit")]
         public async Task<IActionResult> AdminDeposit([FromBody] AdminDepositRequest request)
@@ -177,7 +176,7 @@ namespace BankSysAPI.Controllers
                 return NotFound("IBAN'a ait hesap bulunamadı.");
 
             if (request.Amount <= 0)
-            return BadRequest("Yüklenecek miktar pozitif olmalıdır.");
+                return BadRequest("Yüklenecek miktar pozitif olmalıdır.");
 
             account.Balance += request.Amount;
 
@@ -193,7 +192,22 @@ namespace BankSysAPI.Controllers
             return Ok("Bakiye başarıyla yüklendi.");
         }
 
+        [Authorize]
+        [HttpGet("my-accounts")]
+        public async Task<IActionResult> GetMyAccounts()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+            var accounts = await _context.Accounts
+                .Where(a => a.UserId == userId)
+                .Select(a => new {
+                    a.Id,
+                    a.IBAN,
+                    a.AccountType
+                })
+                .ToListAsync();
 
+            return Ok(accounts);
+        }
     }
 }

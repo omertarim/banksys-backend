@@ -1,5 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using BankSysAPI.Models;
+using BankSysAPI.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace BankSysAPI.Controllers
 {
@@ -7,12 +12,19 @@ namespace BankSysAPI.Controllers
     [Route("api/participation")]
     public class ParticipationLoanController : ControllerBase
     {
+        private readonly BankingDbContext _context;
+
         private readonly Dictionary<string, decimal> _profitRates = new()
         {
             { "İhtiyaç", 2.4m },
             { "Taşıt", 2.1m },
             { "Konut", 1.7m }
         };
+
+        public ParticipationLoanController(BankingDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpPost("calculate")]
         public IActionResult CalculateParticipationLoan([FromBody] ParticipationLoanRequest request)
@@ -36,5 +48,68 @@ namespace BankSysAPI.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("apply")]
+        [Authorize]
+        public async Task<IActionResult> ApplyForLoan([FromBody] LoanApplicationRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                return Unauthorized();
+
+            var userId = int.Parse(userIdClaim.Value);
+
+            var application = new LoanApplication
+            {
+                UserId = userId,
+                LoanType = request.CreditType,
+                Amount = request.Amount,
+                TermInMonths = request.TermInMonths,
+                Status = "Pending",
+                ApplicationDate = DateTime.UtcNow,
+                TargetAccountId = request.TargetAccountId 
+            };
+
+            _context.LoanApplications.Add(application);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Kredi başvurunuz alınmıştır ve onay bekliyor." });
+        }
+
+
+
+
+
+
+        [Authorize]
+        [HttpGet("my-applications")]
+        public async Task<IActionResult> GetMyLoanApplications()
+        {
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var applications = await _context.LoanApplications
+                .Where(l => l.UserId == userId)
+                .Include(l => l.User)
+                .Include(l => l.TargetAccount)
+                .Select(l => new
+                {
+                    l.Id,
+                    l.LoanType,
+                    l.Amount,
+                    l.TermInMonths,
+                    l.Status,
+                    l.ApplicationDate,
+                    TargetAccount = new
+                    {
+                        l.TargetAccount.Id,
+                        l.TargetAccount.IBAN,
+                        l.TargetAccount.AccountType
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(applications);
+        }
+
     }
 }

@@ -4,6 +4,7 @@ using BankSysAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankSysAPI.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    partial class BankingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250623101532_AddTargetAccountToLoanApplicationClean")]
+    partial class AddTargetAccountToLoanApplicationClean
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,7 +85,7 @@ namespace BankSysAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TargetAccountId")
+                    b.Property<int>("TargetAccountId")
                         .HasColumnType("int");
 
                     b.Property<int>("TermInMonths")
@@ -92,8 +95,6 @@ namespace BankSysAPI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TargetAccountId");
 
                     b.HasIndex("UserId");
 
@@ -172,17 +173,11 @@ namespace BankSysAPI.Migrations
 
             modelBuilder.Entity("BankSysAPI.Models.LoanApplication", b =>
                 {
-                    b.HasOne("BankSysAPI.Models.Account", "TargetAccount")
-                        .WithMany()
-                        .HasForeignKey("TargetAccountId");
-
                     b.HasOne("User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("TargetAccount");
 
                     b.Navigation("User");
                 });

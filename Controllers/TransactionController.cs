@@ -18,36 +18,63 @@ namespace BankSysAPI.Controllers
             _context = context;
         }
 
+      
+
         [HttpGet("by-account/{accountId}")]
         [Authorize]
-        public async Task<IActionResult> GetTransactionsByAccount(int accountId)
+        public async Task<IActionResult> GetTransactionsByAccount(
+            int accountId,
+            [FromQuery] DateTime? start,
+            [FromQuery] DateTime? end)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            // Bu kullanıcıya ait mi kontrolü
-            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == accountId && a.UserId == userId);
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == accountId && a.UserId == userId);
+
             if (account == null)
                 return Unauthorized("Bu hesaba erişim izniniz yok.");
 
-            // Bu hesaba gelen tüm transferleri bul
-            var transactions = await _context.Transactions
-                .Where(t => t.ReceiverAccountId == accountId)
-                .Join(_context.Accounts,
-                      t => t.SenderAccountId,
-                      a => a.Id,
-                      (t, senderAccount) => new
-                      {
-                          t.Id,
-                          Amount = t.Amount,
-                          Timestamp = t.Timestamp,
-                          SenderFullName = _context.Users
-                              .Where(u => u.Id == senderAccount.UserId)
-                              .Select(u => u.Username)
-                              .FirstOrDefault()
-                      })
+            var transactionsQuery = _context.Transactions
+                .Where(t => t.SenderAccountId == accountId || t.ReceiverAccountId == accountId)
+                .AsQueryable();
+
+            if (start.HasValue)
+                transactionsQuery = transactionsQuery.Where(t => t.Timestamp >= start.Value);
+
+            if (end.HasValue)
+                transactionsQuery = transactionsQuery.Where(t => t.Timestamp <= end.Value);
+
+            var transactions = await transactionsQuery
+                .OrderByDescending(t => t.Timestamp)
                 .ToListAsync();
 
-            return Ok(transactions);
+            var results = new List<TransactionViewModel>();
+
+            foreach (var t in transactions)
+            {
+                bool isIncoming = t.ReceiverAccountId == accountId;
+                int counterpartyAccountId = isIncoming ? t.SenderAccountId ?? 0 : t.ReceiverAccountId;
+
+                var counterpartyAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == counterpartyAccountId);
+                var counterpartyUser = counterpartyAccount != null
+                    ? await _context.Users.FirstOrDefaultAsync(u => u.Id == counterpartyAccount.UserId)
+                    : null;
+
+                results.Add(new TransactionViewModel
+                {
+                    Direction = isIncoming ? "Gelen" : "Giden",
+                    CounterpartyName = counterpartyUser?.Username ?? "Bilinmiyor",
+                    CounterpartyIban = counterpartyAccount?.IBAN ?? "-",
+                    Amount = t.Amount,
+                    Timestamp = t.Timestamp
+                });
+            }
+
+            return Ok(results);
         }
+
+
+
     }
 }

@@ -4,5 +4,6 @@ namespace BankSysAPI.Models
     {
         public string ReceiverIban { get; set; } = null!;
         public decimal Amount { get; set; }
+        public int SenderAccountId {get; set;}
     }
 }

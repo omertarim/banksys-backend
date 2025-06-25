@@ -41,11 +41,18 @@ namespace BankSysAPI.Controllers
 
             int userId = int.Parse(userIdClaim.Value);
 
-            var senderAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
-            var receiverAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.IBAN == request.ReceiverIban);
+            // Gönderici hesabı kontrolü
+            var senderAccount = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == request.SenderAccountId && a.UserId == userId);
 
-            if (senderAccount == null || receiverAccount == null)
-                return NotFound("Gönderici veya alıcı hesap bulunamadı.");
+            var receiverAccount = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.IBAN == request.ReceiverIban);
+
+            if (senderAccount == null)
+                return NotFound("Gönderici hesap bulunamadı.");
+
+            if (receiverAccount == null)
+                return NotFound("Alıcı hesap bulunamadı.");
 
             if (senderAccount.Balance < request.Amount)
                 return BadRequest("Yetersiz bakiye.");
@@ -64,7 +71,6 @@ namespace BankSysAPI.Controllers
             await _context.SaveChangesAsync();
             return Ok("Transfer başarılı.");
         }
-
         [Authorize]
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositRequest request)

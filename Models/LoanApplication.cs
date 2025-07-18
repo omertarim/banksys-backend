@@ -16,23 +16,27 @@ namespace BankSysAPI.Models
         public User User { get; set; }
 
         [Required]
-        public string LoanType { get; set; }
-
-        [Required]
         public decimal Amount { get; set; }
 
         [Required]
         public int TermInMonths { get; set; }
 
-        public string Status { get; set; } = "Pending";
-
         public DateTime ApplicationDate { get; set; } = DateTime.UtcNow;
 
-        // ✅ Foreign Key ilişkilendirmesi
         public int? TargetAccountId { get; set; }
 
         [ForeignKey("TargetAccountId")]
         public Account TargetAccount { get; set; }
+
+        public int LoanApplicationTypeId { get; set; }
+        public LoanApplicationType? LoanApplicationType { get; set; }
+
+        public int LoanStatusId { get; set; }
+        public LoanStatus LoanStatus { get; set; }
+
+
+
+
 
     }
 }

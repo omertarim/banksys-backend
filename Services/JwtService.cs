@@ -29,7 +29,30 @@ namespace BankSysAPI.Services
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User")
+                new Claim(ClaimTypes.Role, ((Role)user.RoleId).ToString()) // 🔧 Burada enum ismine dönüştürme yapıldı
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _issuer,
+                audience: _audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(_expiresInMinutes),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public string GenerateTokenForCustomer(Customer customer)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, customer.CustomerId.ToString()),
+                new Claim(ClaimTypes.Role, "Customer"),
+                new Claim("LoginType", "Customer")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));

@@ -1,7 +1,10 @@
-public class LoanApplicationRequest
+namespace BankSysAPI.Models
 {
-    public string CreditType { get; set; }
-    public decimal Amount { get; set; }
-    public int TermInMonths { get; set; }
-    public int TargetAccountId { get; set; } 
+    public class LoanApplicationRequest
+    {
+        public int LoanApplicationTypeId { get; set; } // ✅ string değil
+        public decimal Amount { get; set; }
+        public int TermInMonths { get; set; }
+        public int TargetAccountId { get; set; }
+    }
 }

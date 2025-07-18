@@ -174,7 +174,7 @@ namespace BankSysAPI.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var adminUser = await _context.Users.FindAsync(userId);
 
-            if (adminUser == null || !adminUser.IsAdmin)
+            if (adminUser == null || adminUser.RoleId != Role.Admin)
                 return Forbid("Sadece adminler bu işlemi yapabilir.");
 
             var account = await _context.Accounts.FirstOrDefaultAsync(a => a.IBAN == request.IBAN);

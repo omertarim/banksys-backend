@@ -4,6 +4,7 @@ using BankSysAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankSysAPI.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    partial class BankingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250627183949_AddCustomerModelAndAuthSupport")]
+    partial class AddCustomerModelAndAuthSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,71 +63,6 @@ namespace BankSysAPI.Migrations
                     b.ToTable("Accounts");
                 });
 
-            modelBuilder.Entity("BankSysAPI.Models.Admin", b =>
-                {
-                    b.Property<int>("AdminId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdminId"));
-
-                    b.Property<DateTime>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreateUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HostIp")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastUpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastUpdateUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Surname")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("AdminId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Admins");
-                });
-
             modelBuilder.Entity("BankSysAPI.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -145,16 +83,14 @@ namespace BankSysAPI.Migrations
                     b.Property<int?>("CitizenshipCountryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("CreateDate")
+                    b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreateUser")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomerNumber")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("HostIp")
@@ -170,6 +106,11 @@ namespace BankSysAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PersonType")
@@ -179,6 +120,7 @@ namespace BankSysAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TaxNumber")
@@ -193,97 +135,11 @@ namespace BankSysAPI.Migrations
                     b.HasKey("CustomerId");
 
                     b.HasIndex("Email")
-                        .IsUnique()
-                        .HasFilter("[Email] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Customers");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.CustomerEmail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("CustomerEmails");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.Employee", b =>
-                {
-                    b.Property<int>("EmployeeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeId"));
-
-                    b.Property<DateTime>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreateUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("HostIp")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastUpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastUpdateUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Surname")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("EmployeeId");
-
-                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("BankSysAPI.Models.LoanApplication", b =>
@@ -300,11 +156,9 @@ namespace BankSysAPI.Migrations
                     b.Property<DateTime>("ApplicationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("LoanApplicationTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LoanStatusId")
-                        .HasColumnType("int");
+                    b.Property<string>("LoanType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -321,84 +175,11 @@ namespace BankSysAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LoanApplicationTypeId");
-
-                    b.HasIndex("LoanStatusId");
-
                     b.HasIndex("TargetAccountId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("LoanApplications");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.LoanApplicationType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LoanApplicationTypes");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.LoanStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LoanStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = -1,
-                            Description = "Waiting for approval",
-                            IsActive = true,
-                            Name = "Pending"
-                        },
-                        new
-                        {
-                            Id = -2,
-                            Description = "Loan has been approved",
-                            IsActive = true,
-                            Name = "Approved"
-                        },
-                        new
-                        {
-                            Id = -3,
-                            Description = "Loan has been rejected",
-                            IsActive = true,
-                            Name = "Rejected"
-                        });
                 });
 
             modelBuilder.Entity("BankSysAPI.Models.Transaction", b =>
@@ -455,6 +236,9 @@ namespace BankSysAPI.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
 
@@ -487,17 +271,6 @@ namespace BankSysAPI.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("BankSysAPI.Models.Admin", b =>
-                {
-                    b.HasOne("User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("BankSysAPI.Models.Customer", b =>
                 {
                     b.HasOne("User", "User")
@@ -509,31 +282,8 @@ namespace BankSysAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BankSysAPI.Models.CustomerEmail", b =>
-                {
-                    b.HasOne("BankSysAPI.Models.Customer", "Customer")
-                        .WithMany("Emails")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("BankSysAPI.Models.LoanApplication", b =>
                 {
-                    b.HasOne("BankSysAPI.Models.LoanApplicationType", "LoanApplicationType")
-                        .WithMany()
-                        .HasForeignKey("LoanApplicationTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BankSysAPI.Models.LoanStatus", "LoanStatus")
-                        .WithMany()
-                        .HasForeignKey("LoanStatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("BankSysAPI.Models.Account", "TargetAccount")
                         .WithMany()
                         .HasForeignKey("TargetAccountId");
@@ -543,10 +293,6 @@ namespace BankSysAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("LoanApplicationType");
-
-                    b.Navigation("LoanStatus");
 
                     b.Navigation("TargetAccount");
 
@@ -568,11 +314,6 @@ namespace BankSysAPI.Migrations
                     b.Navigation("ReceiverAccount");
 
                     b.Navigation("SenderAccount");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.Customer", b =>
-                {
-                    b.Navigation("Emails");
                 });
 #pragma warning restore 612, 618
         }

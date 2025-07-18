@@ -30,7 +30,7 @@ namespace BankSysAPI.Controllers
         {
             var pendingLoans = await _context.LoanApplications
                 .Include(l => l.User)
-                .Where(l => l.Status == "Pending")
+                .Where(l => l.LoanStatusId == -1) // Use LoanStatusId instead of Status
                 .ToListAsync();
 
             return Ok(pendingLoans);
@@ -49,15 +49,21 @@ namespace BankSysAPI.Controllers
             if (request.NewStatus != "Approved" && request.NewStatus != "Rejected")
                 return BadRequest("Geçersiz durum.");
 
-            loan.Status = request.NewStatus;
+      
 
+            // Update LoanStatusId based on the new status
             if (request.NewStatus == "Approved")
             {
+                loan.LoanStatusId = -2; // -2 is "Approved"
                 var targetAccount = await _context.Accounts.FindAsync(loan.TargetAccountId);
                 if (targetAccount == null)
                     return NotFound("Hedef hesap bulunamadı.");
 
                 targetAccount.Balance += loan.Amount;
+            }
+            else if (request.NewStatus == "Rejected")
+            {
+                loan.LoanStatusId = -3; // -3 is "Rejected"
             }
 
             await _context.SaveChangesAsync();

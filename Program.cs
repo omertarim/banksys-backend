@@ -61,20 +61,32 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Dummy account ekleme
+// ✅ LoanStatus kayıtlarını seed et
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BankingDbContext>();
 
+    // LoanStatus seed işlemi
+    if (!db.LoanStatuses.Any())
+    {
+        var statuses = new List<LoanStatus>
+        {
+            new LoanStatus { Id = 1, Name = "Pending" },
+            new LoanStatus { Id = 2, Name = "Approved" },
+            new LoanStatus { Id = 3, Name = "Rejected" }
+        };
+
+        db.LoanStatuses.AddRange(statuses);
+        db.SaveChanges();
+    }
+
+    // Eski dummy account temizleme işlemi
     var existing = db.Accounts.FirstOrDefault(a => a.UserId == 15);
     if (existing != null)
     {
         db.Accounts.Remove(existing);
         db.SaveChanges();
     }
-
-    
-    
 }
 
 app.Run();

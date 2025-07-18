@@ -49,7 +49,7 @@ namespace BankSysAPI.Controllers
             return Ok(response);
         }
 
-        [HttpPost("apply")]
+       [HttpPost("apply")]
         [Authorize]
         public async Task<IActionResult> ApplyForLoan([FromBody] LoanApplicationRequest request)
         {
@@ -59,15 +59,20 @@ namespace BankSysAPI.Controllers
 
             var userId = int.Parse(userIdClaim.Value);
 
+            // Kredi türü geçerli mi kontrol et
+            var loanType = await _context.LoanApplicationTypes.FindAsync(request.LoanApplicationTypeId);
+            if (loanType == null || !loanType.IsActive)
+                return BadRequest("Geçersiz kredi türü.");
+
             var application = new LoanApplication
             {
                 UserId = userId,
-                LoanType = request.CreditType,
+                LoanApplicationTypeId = request.LoanApplicationTypeId,
                 Amount = request.Amount,
                 TermInMonths = request.TermInMonths,
-                Status = "Pending",
+                LoanStatusId = -1, // Set to -1 for "Pending"
                 ApplicationDate = DateTime.UtcNow,
-                TargetAccountId = request.TargetAccountId 
+                TargetAccountId = request.TargetAccountId
             };
 
             _context.LoanApplications.Add(application);
@@ -88,23 +93,18 @@ namespace BankSysAPI.Controllers
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var applications = await _context.LoanApplications
-                .Where(l => l.UserId == userId)
-                .Include(l => l.User)
-                .Include(l => l.TargetAccount)
-                .Select(l => new
-                {
+                .Include(l => l.LoanStatus)
+                .Select(l => new {
                     l.Id,
-                    l.LoanType,
+                    l.UserId,
                     l.Amount,
                     l.TermInMonths,
-                    l.Status,
                     l.ApplicationDate,
-                    TargetAccount = new
-                    {
-                        l.TargetAccount.Id,
-                        l.TargetAccount.IBAN,
-                        l.TargetAccount.AccountType
-                    }
+                    l.TargetAccountId,
+                    l.LoanApplicationTypeId,
+                    l.LoanStatusId,
+                    LoanStatusName = l.LoanStatus.Name,
+                    LoanStatusDescription = l.LoanStatus.Description
                 })
                 .ToListAsync();
 

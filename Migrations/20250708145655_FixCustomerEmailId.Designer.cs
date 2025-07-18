@@ -4,6 +4,7 @@ using BankSysAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankSysAPI.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    partial class BankingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250708145655_FixCustomerEmailId")]
+    partial class FixCustomerEmailId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -300,11 +303,9 @@ namespace BankSysAPI.Migrations
                     b.Property<DateTime>("ApplicationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("LoanApplicationTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LoanStatusId")
-                        .HasColumnType("int");
+                    b.Property<string>("LoanType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -321,84 +322,11 @@ namespace BankSysAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LoanApplicationTypeId");
-
-                    b.HasIndex("LoanStatusId");
-
                     b.HasIndex("TargetAccountId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("LoanApplications");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.LoanApplicationType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LoanApplicationTypes");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.LoanStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LoanStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = -1,
-                            Description = "Waiting for approval",
-                            IsActive = true,
-                            Name = "Pending"
-                        },
-                        new
-                        {
-                            Id = -2,
-                            Description = "Loan has been approved",
-                            IsActive = true,
-                            Name = "Approved"
-                        },
-                        new
-                        {
-                            Id = -3,
-                            Description = "Loan has been rejected",
-                            IsActive = true,
-                            Name = "Rejected"
-                        });
                 });
 
             modelBuilder.Entity("BankSysAPI.Models.Transaction", b =>
@@ -522,18 +450,6 @@ namespace BankSysAPI.Migrations
 
             modelBuilder.Entity("BankSysAPI.Models.LoanApplication", b =>
                 {
-                    b.HasOne("BankSysAPI.Models.LoanApplicationType", "LoanApplicationType")
-                        .WithMany()
-                        .HasForeignKey("LoanApplicationTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BankSysAPI.Models.LoanStatus", "LoanStatus")
-                        .WithMany()
-                        .HasForeignKey("LoanStatusId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("BankSysAPI.Models.Account", "TargetAccount")
                         .WithMany()
                         .HasForeignKey("TargetAccountId");
@@ -543,10 +459,6 @@ namespace BankSysAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("LoanApplicationType");
-
-                    b.Navigation("LoanStatus");
 
                     b.Navigation("TargetAccount");
 

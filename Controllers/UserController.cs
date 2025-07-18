@@ -7,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace BankSysAPI.Controllers
 {
     [ApiController]
@@ -30,19 +29,38 @@ namespace BankSysAPI.Controllers
         {
             var email = request.Email?.Trim().ToLower();
 
-            // Kullanıcı her zaman onay beklemelidir (admin dahil)
             var user = new User
             {
                 Email = email,
                 Username = request.Username,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 FullName = request.FullName,
-                IsAdmin = email != null && email.EndsWith("@admin.com"),
-                IsApproved = false // ✅ herkeste başlangıçta false
+                IsApproved = false,
+                RoleId = email != null && email.EndsWith("@admin.com") ? Role.Admin : Role.Customer,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                Status = "Pending"
             };
 
             _context.Users.Add(user);
             _context.SaveChanges();
+
+            // Eğer Customer ise Customer tablosuna da ekle
+            if (user.RoleId == Role.Customer)
+            {
+                var customer = new Customer
+                {
+                    UserId = user.Id,
+                    Status = "Pending",
+                    CreateDate = DateTime.UtcNow,
+                    LastUpdateDate = DateTime.UtcNow,
+                    CustomerNumber = $"C{user.Id:D6}", // örnek müşteri numarası üretimi
+                    HostIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+                };
+
+                _context.Customers.Add(customer);
+                _context.SaveChanges();
+            }
 
             return Ok(new
             {
@@ -50,12 +68,10 @@ namespace BankSysAPI.Controllers
                 user.Email,
                 user.Username,
                 user.FullName,
-                user.IsAdmin,
+                user.RoleId,
                 user.IsApproved
-                });
+            });
         }
-
-
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
@@ -70,10 +86,8 @@ namespace BankSysAPI.Controllers
 
             var token = _jwtService.GenerateToken(user);
 
-
             return Ok(new { token });
         }
-
 
         [Authorize]
         [HttpGet("secret")]
@@ -138,50 +152,84 @@ namespace BankSysAPI.Controllers
             return Ok("Password has been successfully reset.");
         }
 
-
-
         [HttpPost("approve/{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ApproveUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound("Kullanıcı bulunamadı.");
+            if (user == null)
+                return NotFound("Kullanıcı bulunamadı.");
 
             user.IsApproved = true;
             user.Status = "Accepted";
+            user.UpdatedAt = DateTime.UtcNow;
+
+            // İlgili müşteri kaydını bul ve status'ü senkronize et
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == id);
+            if (customer != null)
+            {
+                customer.Status = "Accepted";
+                customer.LastUpdateDate = DateTime.UtcNow;
+            }
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Kullanıcı onaylandı." });
-        }       
+
+            return Ok("Kullanıcı ve müşteri başarıyla onaylandı.");
+        }
+
 
         [HttpPost("reject/{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RejectUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound("Kullanıcı bulunamadı.");
+            if (user == null)
+                return NotFound("Kullanıcı bulunamadı.");
 
+            user.IsApproved = false;
             user.Status = "Rejected";
+            user.UpdatedAt = DateTime.UtcNow;
+
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Kullanıcı reddedildi." });
+            // İlgili müşteri kaydını bul ve status'ü senkronize et
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == id);
+            if (customer != null)
+            {
+                customer.Status = "Rejected";
+                customer.LastUpdateDate = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Kullanıcı ve müşteri başarıyla reddedildi.");
         }
 
+
+
+
+
+
+
+
+       
+
+
+
+
         [HttpGet("pending")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<IActionResult> GetPendingUsers()
         {
+            var requesterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var requester = await _context.Users.FindAsync(requesterId);
+            if (requester == null || requester.RoleId != Role.Admin)
+                return Forbid("Bu işlemi yapma yetkiniz yok.");
+
             var users = await _context.Users
                 .Where(u => u.Status == "Pending")
                 .ToListAsync();
 
             return Ok(users);
         }
-
-
-
-
-
 
         [Authorize]
         [HttpGet("all")]
@@ -190,7 +238,7 @@ namespace BankSysAPI.Controllers
             var requesterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var requester = _context.Users.FirstOrDefault(u => u.Id == requesterId);
 
-            if (requester == null || !requester.IsAdmin)
+            if (requester == null || requester.RoleId != Role.Admin)
                 return Forbid("Bu işlemi yapma yetkiniz yok.");
 
             var users = _context.Users.Select(u => new
@@ -198,12 +246,11 @@ namespace BankSysAPI.Controllers
                 u.Id,
                 u.Username,
                 u.Email,
-                u.IsApproved
+                u.IsApproved,
+                u.RoleId
             }).ToList();
 
             return Ok(users);
         }
-
-
     }
 }

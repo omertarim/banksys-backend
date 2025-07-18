@@ -4,6 +4,7 @@ using BankSysAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankSysAPI.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    partial class BankingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250714113457_CreateLoanStatusesTable")]
+    partial class CreateLoanStatusesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -376,29 +379,6 @@ namespace BankSysAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LoanStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = -1,
-                            Description = "Waiting for approval",
-                            IsActive = true,
-                            Name = "Pending"
-                        },
-                        new
-                        {
-                            Id = -2,
-                            Description = "Loan has been approved",
-                            IsActive = true,
-                            Name = "Approved"
-                        },
-                        new
-                        {
-                            Id = -3,
-                            Description = "Loan has been rejected",
-                            IsActive = true,
-                            Name = "Rejected"
-                        });
                 });
 
             modelBuilder.Entity("BankSysAPI.Models.Transaction", b =>

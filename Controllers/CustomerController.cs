@@ -32,6 +32,7 @@ namespace BankSysAPI.Controllers
             {
                 Email = request.Email ?? "",
                 Username = request.Name,
+                FullName = request.Name, 
                 PasswordHash = hashedPassword,
                 RoleId = Role.Customer,
                 IsActive = false,

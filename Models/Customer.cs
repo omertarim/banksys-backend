@@ -15,17 +15,23 @@ namespace BankSysAPI.Models
 
         public string? Name { get; set; }
         public string? TaxNumber { get; set; }
-        public string? TaxOffice { get; set; }
-        public string? PersonType { get; set; }
-        public string? Citizenship { get; set; }
-        public string? Accomodation { get; set; }
+        public int? TaxOfficeId { get; set; }
+        public TaxOffice? TaxOffice { get; set; }
+        public int PersonTypeId { get; set; }
+        public PersonType? PersonType { get; set; }
+        public int CitizenshipId { get; set; }
+        public Citizenship? Citizenship { get; set; }
+        public int? AccomodationId { get; set; }
+        public Accomodation? Accomodation { get; set; }
 
-        public string? Language { get; set; }
+        public int? LanguageId { get; set; }
+        public Language? Language { get; set; }
         public string? RecordingChannel { get; set; }
 
-        public int? CitizenshipCountryId { get; set; }
-        public int? AccomodationCountryId { get; set; }
-
+        [Range(100, 999, ErrorMessage = "CitizenshipCountryId 3 haneli olmalı.")]
+        public int CitizenshipCountryId { get; set; }
+        public int AccomodationCountryId { get; set; }
+        
         public string? Status { get; set; }
         public DateTime? CreateDate { get; set; }
         public string? CreateUser { get; set; }

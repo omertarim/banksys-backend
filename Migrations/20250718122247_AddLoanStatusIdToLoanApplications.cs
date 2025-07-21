@@ -43,9 +43,7 @@ namespace BankSysAPI.Migrations
                 name: "IX_LoanApplications_LoanStatusId",
                 table: "LoanApplications");
 
-            migrationBuilder.DropColumn(
-                name: "LoanStatusId",
-                table: "LoanApplications");
+            
         }
     }
 }

@@ -81,9 +81,9 @@ namespace BankSysAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    //b.Property<string>("Status")
+                    //    .IsRequired()
+                    //    .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TermInMonths")
                         .HasColumnType("int");

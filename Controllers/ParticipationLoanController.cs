@@ -93,7 +93,7 @@ namespace BankSysAPI.Controllers
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var applications = await _context.LoanApplications
-                .Include(l => l.LoanStatus)
+                .Include(l => l.LoanStatusId)
                 .Select(l => new {
                     l.Id,
                     l.UserId,

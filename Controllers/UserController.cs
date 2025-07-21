@@ -34,7 +34,7 @@ namespace BankSysAPI.Controllers
                 Email = email,
                 Username = request.Username,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                FullName = request.FullName,
+                //FullName = request.FullName,
                 IsApproved = false,
                 RoleId = email != null && email.EndsWith("@admin.com") ? Role.Admin : Role.Customer,
                 CreatedAt = DateTime.UtcNow,
@@ -67,7 +67,7 @@ namespace BankSysAPI.Controllers
                 user.Id,
                 user.Email,
                 user.Username,
-                user.FullName,
+                //user.FullName,
                 user.RoleId,
                 user.IsApproved
             });
@@ -226,6 +226,11 @@ namespace BankSysAPI.Controllers
 
             var users = await _context.Users
                 .Where(u => u.Status == "Pending")
+                .Select(u => new {
+                    u.Id,
+                    Name = u.Username, // <--- Use Username as Name
+                    u.Email
+                })
                 .ToListAsync();
 
             return Ok(users);
@@ -235,16 +240,10 @@ namespace BankSysAPI.Controllers
         [HttpGet("all")]
         public IActionResult GetAllUsers()
         {
-            var requesterId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var requester = _context.Users.FirstOrDefault(u => u.Id == requesterId);
-
-            if (requester == null || requester.RoleId != Role.Admin)
-                return Forbid("Bu işlemi yapma yetkiniz yok.");
-
             var users = _context.Users.Select(u => new
             {
                 u.Id,
-                u.Username,
+                Name = u.Username, // or u.FullName if you want
                 u.Email,
                 u.IsApproved,
                 u.RoleId

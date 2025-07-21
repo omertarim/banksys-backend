@@ -18,9 +18,14 @@ namespace BankSysAPI.Data
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<CustomerEmail> CustomerEmails { get; set; }
+        public DbSet<PersonType> PersonTypes { get; set; }
+        public DbSet<TaxOffice> TaxOffices { get; set; }
+        public DbSet<Citizenship> Citizenships { get; set; }
 
         public DbSet<LoanApplicationType> LoanApplicationTypes { get; set; }
         public DbSet<LoanStatus> LoanStatuses { get; set; }
+        public DbSet<Accomodation> Accomodations { get; set; }
+        public DbSet<Language> Languages { get; set; }
 
 
 
@@ -49,7 +54,7 @@ namespace BankSysAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LoanApplication>()
-                .HasOne(l => l.LoanStatus)
+                .HasOne(l => l.LoanStatus) // LoanStatus is the navigation property
                 .WithMany()
                 .HasForeignKey(l => l.LoanStatusId)
                 .OnDelete(DeleteBehavior.Restrict);

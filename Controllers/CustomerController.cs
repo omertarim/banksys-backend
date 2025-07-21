@@ -32,6 +32,7 @@ namespace BankSysAPI.Controllers
             {
                 Email = request.Email ?? "",
                 Username = request.Name,
+                FullName = request.Name, 
                 PasswordHash = hashedPassword,
                 RoleId = Role.Customer,
                 IsActive = false,
@@ -59,11 +60,11 @@ namespace BankSysAPI.Controllers
                 Name = user.Username,
                 Status = user.Status, // Status eşitleniyor
                 TaxNumber = request.TaxNumber,
-                TaxOffice = request.TaxOffice,
-                PersonType = request.PersonType,
-                Citizenship = request.Citizenship,
-                Accomodation = request.Accomodation,
-                Language = request.Language,
+                TaxOfficeId = request.TaxOfficeId,
+                PersonTypeId = request.PersonTypeId,
+                CitizenshipId = request.CitizenshipId,
+                AccomodationId = request.AccomodationId,
+                LanguageId = request.LanguageId,
                 RecordingChannel = request.RecordingChannel,
                 CitizenshipCountryId = request.CitizenshipCountryId,
                 AccomodationCountryId = request.AccomodationCountryId,
@@ -141,14 +142,14 @@ namespace BankSysAPI.Controllers
 
             customer.Name = request.Name ?? customer.Name;
             customer.TaxNumber = request.TaxNumber ?? customer.TaxNumber;
-            customer.TaxOffice = request.TaxOffice ?? customer.TaxOffice;
-            customer.Language = request.Language ?? customer.Language;
-            customer.PersonType = request.PersonType ?? customer.PersonType;
-            customer.Citizenship = request.Citizenship ?? customer.Citizenship;
-            customer.Accomodation = request.Accomodation ?? customer.Accomodation;
+            customer.TaxOfficeId = request.TaxOfficeId ?? customer.TaxOfficeId;
+            customer.LanguageId = request.LanguageId ?? customer.LanguageId;
+            customer.PersonTypeId = request.PersonTypeId ?? customer.PersonTypeId;
+            customer.CitizenshipId = request.CitizenshipId ?? customer.CitizenshipId;
+            customer.AccomodationId = request.AccomodationId ?? customer.AccomodationId;
             customer.RecordingChannel = request.RecordingChannel ?? customer.RecordingChannel;
-            customer.CitizenshipCountryId = request.CitizenshipCountryId ?? customer.CitizenshipCountryId;
-            customer.AccomodationCountryId = request.AccomodationCountryId ?? customer.AccomodationCountryId;
+            customer.CitizenshipCountryId = request.CitizenshipCountryId;
+            customer.AccomodationCountryId = request.AccomodationCountryId;
             customer.LastUpdateDate = DateTime.UtcNow;
 
             if (customer.User != null)
@@ -208,6 +209,12 @@ namespace BankSysAPI.Controllers
             var customer = await _context.Customers
                 .Include(c => c.User)
                 .Include(c => c.Emails)
+                .Include(c => c.PersonType)
+                .Include(c => c.TaxOffice) // Uncomment after you add these navigation properties
+                .Include(c => c.Citizenship)
+                .Include(c => c.Accomodation)
+                .Include(c => c.Language)
+                // .Include(c => c.RecordingChannel)
                 .FirstOrDefaultAsync(c => c.CustomerId == id);
 
             if (customer == null)
@@ -218,9 +225,18 @@ namespace BankSysAPI.Controllers
                 customer.CustomerId,
                 customer.Name,
                 customer.TaxNumber,
-                customer.TaxOffice,
-                customer.PersonType,
-                customer.Citizenship,
+                personTypeId = customer.PersonTypeId,
+                personTypeName = customer.PersonType?.Name,
+                taxOfficeId = customer.TaxOfficeId,
+                taxOfficeName = customer.TaxOffice?.Name,
+                citizenshipId = customer.CitizenshipId,
+                citizenshipName = customer.Citizenship?.Name,
+                accomodationId = customer.AccomodationId,
+                accomodationName = customer.Accomodation?.Name,
+                languageId = customer.LanguageId,
+                languageName = customer.Language?.Name,
+                // recordingChannelId = customer.RecordingChannelId,
+                // recordingChannelName = customer.RecordingChannel?.Name,
                 customer.Accomodation,
                 customer.Language,
                 customer.RecordingChannel,
@@ -230,6 +246,48 @@ namespace BankSysAPI.Controllers
             });
         }
 
-       
+        [HttpGet("persontypes")]
+        public async Task<IActionResult> GetPersonTypes()
+        {
+            var types = await _context.PersonTypes
+                .Select(pt => new { pt.Id, pt.Name })
+                .ToListAsync();
+            return Ok(types);
+        }
+
+        [HttpGet("taxoffices")]
+        public async Task<IActionResult> GetTaxOffices()
+        {
+            var offices = await _context.TaxOffices
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
+            return Ok(offices);
+        }
+
+        [HttpGet("citizenships")]
+        public async Task<IActionResult> GetCitizenships()
+        {
+            var citizenships = await _context.Citizenships
+                .Select(c => new { c.Id, c.Name })
+                .ToListAsync();
+            return Ok(citizenships);
+        }
+        [HttpGet("accomodations")]
+        public async Task<IActionResult> GetAccomodations()
+        {
+            var accomodations = await _context.Accomodations
+                .Select(a => new { a.Id, a.Name })
+                .ToListAsync();
+            return Ok(accomodations);
+        }
+
+        [HttpGet("languages")]
+        public async Task<IActionResult> GetLanguages()
+        {
+            var languages = await _context.Languages
+                .Select(l => new { l.Id, l.Name })
+                .ToListAsync();
+            return Ok(languages);
+        }
     }
 }

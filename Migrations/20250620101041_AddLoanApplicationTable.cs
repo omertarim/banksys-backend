@@ -21,7 +21,7 @@ namespace BankSysAPI.Migrations
                     LoanType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     TermInMonths = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    //Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ApplicationDate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>

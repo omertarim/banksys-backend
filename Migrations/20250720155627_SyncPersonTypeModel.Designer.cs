@@ -4,6 +4,7 @@ using BankSysAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankSysAPI.Migrations
 {
     [DbContext(typeof(BankingDbContext))]
-    partial class BankingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250720155627_SyncPersonTypeModel")]
+    partial class SyncPersonTypeModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,23 +24,6 @@ namespace BankSysAPI.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BankSysAPI.Models.Accomodation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Accomodations");
-                });
 
             modelBuilder.Entity("BankSysAPI.Models.Account", b =>
                 {
@@ -142,23 +128,6 @@ namespace BankSysAPI.Migrations
                     b.ToTable("Admins");
                 });
 
-            modelBuilder.Entity("BankSysAPI.Models.Citizenship", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Citizenships");
-                });
-
             modelBuilder.Entity("BankSysAPI.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -167,16 +136,16 @@ namespace BankSysAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CustomerId"));
 
-                    b.Property<int>("AccomodationCountryId")
+                    b.Property<string>("Accomodation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("AccomodationCountryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AccomodationId")
-                        .HasColumnType("int");
+                    b.Property<string>("Citizenship")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CitizenshipCountryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CitizenshipId")
+                    b.Property<int?>("CitizenshipCountryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CreateDate")
@@ -194,8 +163,8 @@ namespace BankSysAPI.Migrations
                     b.Property<string>("HostIp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("LanguageId")
-                        .HasColumnType("int");
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastUpdateDate")
                         .HasColumnType("datetime2");
@@ -218,27 +187,19 @@ namespace BankSysAPI.Migrations
                     b.Property<string>("TaxNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TaxOfficeId")
-                        .HasColumnType("int");
+                    b.Property<string>("TaxOffice")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("CustomerId");
 
-                    b.HasIndex("AccomodationId");
-
-                    b.HasIndex("CitizenshipId");
-
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasFilter("[Email] IS NOT NULL");
 
-                    b.HasIndex("LanguageId");
-
                     b.HasIndex("PersonTypeId");
-
-                    b.HasIndex("TaxOfficeId");
 
                     b.HasIndex("UserId");
 
@@ -328,23 +289,6 @@ namespace BankSysAPI.Migrations
                     b.HasKey("EmployeeId");
 
                     b.ToTable("Employees");
-                });
-
-            modelBuilder.Entity("BankSysAPI.Models.Language", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Languages");
                 });
 
             modelBuilder.Entity("BankSysAPI.Models.LoanApplication", b =>
@@ -475,23 +419,6 @@ namespace BankSysAPI.Migrations
                     b.ToTable("PersonTypes");
                 });
 
-            modelBuilder.Entity("BankSysAPI.Models.TaxOffice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TaxOffices");
-                });
-
             modelBuilder.Entity("BankSysAPI.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -591,29 +518,11 @@ namespace BankSysAPI.Migrations
 
             modelBuilder.Entity("BankSysAPI.Models.Customer", b =>
                 {
-                    b.HasOne("BankSysAPI.Models.Accomodation", "Accomodation")
-                        .WithMany()
-                        .HasForeignKey("AccomodationId");
-
-                    b.HasOne("BankSysAPI.Models.Citizenship", "Citizenship")
-                        .WithMany()
-                        .HasForeignKey("CitizenshipId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BankSysAPI.Models.Language", "Language")
-                        .WithMany()
-                        .HasForeignKey("LanguageId");
-
                     b.HasOne("BankSysAPI.Models.PersonType", "PersonType")
                         .WithMany()
                         .HasForeignKey("PersonTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("BankSysAPI.Models.TaxOffice", "TaxOffice")
-                        .WithMany()
-                        .HasForeignKey("TaxOfficeId");
 
                     b.HasOne("User", "User")
                         .WithMany()
@@ -621,15 +530,7 @@ namespace BankSysAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Accomodation");
-
-                    b.Navigation("Citizenship");
-
-                    b.Navigation("Language");
-
                     b.Navigation("PersonType");
-
-                    b.Navigation("TaxOffice");
 
                     b.Navigation("User");
                 });

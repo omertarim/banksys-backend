@@ -93,18 +93,16 @@ namespace BankSysAPI.Controllers
             int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var applications = await _context.LoanApplications
-                .Include(l => l.LoanStatusId)
+                .Where(l => l.UserId == userId)
+                .Include(l => l.LoanStatus)
+                .Include(l => l.LoanApplicationType)
                 .Select(l => new {
-                    l.Id,
-                    l.UserId,
-                    l.Amount,
-                    l.TermInMonths,
-                    l.ApplicationDate,
-                    l.TargetAccountId,
-                    l.LoanApplicationTypeId,
-                    l.LoanStatusId,
-                    LoanStatusName = l.LoanStatus.Name,
-                    LoanStatusDescription = l.LoanStatus.Description
+                    id = l.Id,
+                    creditType = l.LoanApplicationType.Name,
+                    amount = l.Amount,
+                    termInMonths = l.TermInMonths,
+                    status = l.LoanStatus.Name,
+                    createdAt = l.ApplicationDate
                 })
                 .ToListAsync();
 

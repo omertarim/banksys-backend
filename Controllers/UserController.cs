@@ -34,7 +34,7 @@ namespace BankSysAPI.Controllers
                 Email = email,
                 Username = request.Username,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                //FullName = request.FullName,
+                FullName = request.FullName,
                 IsApproved = false,
                 RoleId = email != null && email.EndsWith("@admin.com") ? Role.Admin : Role.Customer,
                 CreatedAt = DateTime.UtcNow,
@@ -67,7 +67,7 @@ namespace BankSysAPI.Controllers
                 user.Id,
                 user.Email,
                 user.Username,
-                //user.FullName,
+                user.FullName,
                 user.RoleId,
                 user.IsApproved
             });

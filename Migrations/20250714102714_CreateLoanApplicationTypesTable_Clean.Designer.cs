@@ -181,8 +181,8 @@ namespace BankSysAPI.Migrations
                     b.Property<string>("RecordingChannel")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                    //b.Property<string>("Status")
+                    //    .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TaxNumber")
                         .HasColumnType("nvarchar(max)");
@@ -309,9 +309,9 @@ namespace BankSysAPI.Migrations
                     b.Property<int>("LoanStatusId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    //b.Property<string>("Status")
+                    //    .IsRequired()
+                    //    .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TargetAccountId")
                         .HasColumnType("int");
@@ -451,9 +451,9 @@ namespace BankSysAPI.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    //b.Property<string>("Status")
+                    //    .IsRequired()
+                    //    .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");

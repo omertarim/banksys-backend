@@ -44,6 +44,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<LoanScoreService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -77,6 +78,49 @@ using (var scope = app.Services.CreateScope())
         };
 
         db.LoanStatuses.AddRange(statuses);
+        db.SaveChanges();
+    }
+
+    // RiskLevels seed işlemi
+    if (!db.RiskLevels.Any())
+    {
+        var riskLevels = new List<RiskLevel>
+        {
+            new RiskLevel { Id = 1, Name = "Low", Description = "Düşük risk seviyesi" },
+            new RiskLevel { Id = 2, Name = "Medium", Description = "Orta risk seviyesi" },
+            new RiskLevel { Id = 3, Name = "High", Description = "Yüksek risk seviyesi" }
+        };
+
+        db.RiskLevels.AddRange(riskLevels);
+        db.SaveChanges();
+    }
+
+    // RecommendedApprovals seed işlemi
+    if (!db.RecommendedApprovals.Any())
+    {
+        var recommendedApprovals = new List<RecommendedApproval>
+        {
+            new RecommendedApproval { Id = 1, Name = "Approved", Description = "Kredi onayı önerilir" },
+            new RecommendedApproval { Id = 2, Name = "Rejected", Description = "Kredi reddi önerilir" }
+        };
+
+        db.RecommendedApprovals.AddRange(recommendedApprovals);
+        db.SaveChanges();
+    }
+
+    // RecommendationStatuses seed işlemi
+    if (!db.RecommendationStatuses.Any())
+    {
+        var recommendationStatuses = new List<RecommendationStatus>
+        {
+            new RecommendationStatus { Id = 1, Name = "Good financial standing", Description = "İyi finansal durum" },
+            new RecommendationStatus { Id = 2, Name = "Low balance or income", Description = "Düşük bakiye veya gelir" },
+            new RecommendationStatus { Id = 3, Name = "High debt-to-income ratio", Description = "Yüksek borç-gelir oranı" },
+            new RecommendationStatus { Id = 4, Name = "Too many previous loan applications", Description = "Çok fazla önceki kredi başvurusu" },
+            new RecommendationStatus { Id = 5, Name = "Score calculation failed", Description = "Skor hesaplama başarısız" }
+        };
+
+        db.RecommendationStatuses.AddRange(recommendationStatuses);
         db.SaveChanges();
     }
 

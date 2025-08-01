@@ -26,6 +26,10 @@ namespace BankSysAPI.Data
         public DbSet<LoanStatus> LoanStatuses { get; set; }
         public DbSet<Accomodation> Accomodations { get; set; }
         public DbSet<Language> Languages { get; set; }
+        public DbSet<LoanScore> LoanScores { get; set; }
+        public DbSet<RiskLevel> RiskLevels { get; set; }
+        public DbSet<RecommendedApproval> RecommendedApprovals { get; set; }
+        public DbSet<RecommendationStatus> RecommendationStatuses { get; set; }
 
 
 

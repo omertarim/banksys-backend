@@ -52,6 +52,7 @@ namespace BankSysAPI.Controllers
             int newId = (lastCustomer?.CustomerId ?? 0) + 1;
             string newCustomerNumber = "CUST" + newId.ToString("D6");
 
+            var currentUserEmail = User?.Identity?.IsAuthenticated == true ? (User.Identity.Name ?? user.Email) : user.Email;
             var customer = new Customer
             {
                 User = user,
@@ -70,7 +71,8 @@ namespace BankSysAPI.Controllers
                 AccomodationCountryId = request.AccomodationCountryId,
                 CustomerNumber = newCustomerNumber,
                 CreateDate = DateTime.UtcNow,
-                HostIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+                HostIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                CreateUser = currentUserEmail // Set creator
             };
 
             await _context.Customers.AddAsync(customer);
@@ -151,6 +153,8 @@ namespace BankSysAPI.Controllers
             customer.CitizenshipCountryId = request.CitizenshipCountryId;
             customer.AccomodationCountryId = request.AccomodationCountryId;
             customer.LastUpdateDate = DateTime.UtcNow;
+            var updaterEmail = User?.Identity?.IsAuthenticated == true ? (User.Identity.Name ?? customer.Email) : customer.Email;
+            customer.LastUpdateUser = updaterEmail;
 
             if (customer.User != null)
             {

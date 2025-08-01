@@ -4,6 +4,7 @@ using System.Security.Claims;
 using BankSysAPI.Models;
 using BankSysAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using BankSysAPI.Services;
 
 
 namespace BankSysAPI.Controllers
@@ -13,6 +14,7 @@ namespace BankSysAPI.Controllers
     public class ParticipationLoanController : ControllerBase
     {
         private readonly BankingDbContext _context;
+        private readonly LoanScoreService _loanScoreService;
 
         private readonly Dictionary<string, decimal> _profitRates = new()
         {
@@ -21,9 +23,10 @@ namespace BankSysAPI.Controllers
             { "Konut", 1.7m }
         };
 
-        public ParticipationLoanController(BankingDbContext context)
+        public ParticipationLoanController(BankingDbContext context, LoanScoreService loanScoreService)
         {
             _context = context;
+            _loanScoreService = loanScoreService;
         }
 
         [HttpPost("calculate")]
@@ -78,7 +81,29 @@ namespace BankSysAPI.Controllers
             _context.LoanApplications.Add(application);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Kredi başvurunuz alınmıştır ve onay bekliyor." });
+            Console.WriteLine($"Created loan application with ID: {application.Id}");
+
+            // Calculate loan score for the new application
+            try
+            {
+                Console.WriteLine($"Starting score calculation for application {application.Id}");
+                var loanScore = await _loanScoreService.CalculateLoanScoreAsync(application.Id);
+                Console.WriteLine($"Score calculated successfully for application {application.Id}");
+                _context.LoanScores.Add(loanScore);
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"Score saved to database for application {application.Id}");
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't fail the application
+                Console.WriteLine($"Failed to calculate loan score for application {application.Id}: {ex.Message}");
+                Console.WriteLine($"Exception details: {ex.ToString()}");
+            }
+
+            return Ok(new { 
+                message = "Kredi başvurunuz alınmıştır ve onay bekliyor.",
+                applicationId = application.Id
+            });
         }
 
 
